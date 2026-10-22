@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Hollow House: a ghost-deduction game. Buy instruments, gather evidence, name the ghost before it hunts you.">
+<title>Hollow House</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Courier+Prime:wght@400;700&display=swap">
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Hollow House</h1>
+    <span class="stat">Night <b id="hRound">1</b> &nbsp;·&nbsp; Purse <b id="hCash">$120</b> &nbsp;·&nbsp; Room: <b id="hRoom">—</b></span>
+  </header>
+  <div id="stage">
+    <canvas id="cv" width="384" height="288"></canvas>
+    <div id="readout"></div>
+    <div id="hint">drag on the house to walk</div>
+    <button id="bUse2">USE</button>
+  </div>
+  <div id="patience"><i style="width:100%"></i><span id="patLabel">The house is quiet</span></div>
+  <div id="toolbar"></div>
+  <div id="actions">
+    <button class="btn primary" id="bUse">Use (E)</button>
+    <button class="btn" id="bJournal">Journal (J)</button>
+    <button class="btn" id="bLeave">Flee house</button>
+  </div>
+
+</div>
+
+<div class="overlay" id="ovShop"></div>
+<div class="overlay" id="ovJournal" hidden></div>
+<div class="overlay" id="ovResult" hidden></div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
