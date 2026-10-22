@@ -229,6 +229,24 @@ function update(dt){
 }
 
 // ---------- Render ----------
+// A six-fingered handprint, glowing under UV, drawn at tile centre (cx,cy).
+function drawHandprint(cx,cy,glow){
+  ctx.save(); ctx.translate(cx,cy); ctx.rotate(-0.35); ctx.globalAlpha=glow;
+  ctx.shadowColor='#b48cff'; ctx.shadowBlur=8; ctx.fillStyle='#a67cf2';
+  ctx.beginPath(); ctx.ellipse(0,3,6,7,0,0,7); ctx.fill();            // palm
+  for(let i=0;i<5;i++){ const a=-1.25+i*0.62, len=i===0||i===4?8:10; ctx.beginPath(); ctx.ellipse(Math.sin(a)*8,-Math.cos(a)*8-1,2,len/2,a,0,7); ctx.fill(); }
+  ctx.beginPath(); ctx.ellipse(8,4,2,4,-1.2,0,7); ctx.fill();          // the sixth finger
+  ctx.restore();
+}
+// Small readable glyphs for the things a ghost can throw.
+function drawObject(o,sx){
+  const x=o.x*T+sx, y=o.y*T; ctx.fillStyle=o.col;
+  if(o.kind==='vase'){ ctx.beginPath(); ctx.moveTo(x-4,y-7); ctx.lineTo(x+4,y-7); ctx.lineTo(x+6,y+6); ctx.lineTo(x-6,y+6); ctx.closePath(); ctx.fill(); }
+  else if(o.kind==='plate'){ ctx.beginPath(); ctx.arc(x,y,6,0,7); ctx.fill(); ctx.strokeStyle='rgba(0,0,0,.4)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(x,y,3.5,0,7); ctx.stroke(); }
+  else if(o.kind==='lamp'){ ctx.fillRect(x-1,y-2,2,8); ctx.beginPath(); ctx.moveTo(x-6,y-2); ctx.lineTo(x+6,y-2); ctx.lineTo(x+3,y-8); ctx.lineTo(x-3,y-8); ctx.closePath(); ctx.fill(); }
+  else if(o.kind==='doll'){ ctx.beginPath(); ctx.arc(x,y-5,3,0,7); ctx.fill(); ctx.fillRect(x-3,y-2,6,8); ctx.fillRect(x-5,y-1,2,5); ctx.fillRect(x+3,y-1,2,5); }
+  else { ctx.beginPath(); ctx.arc(x,y,5,0,7); ctx.fill(); }
+}
 const cam={x:0,y:0,init:false};
 function draw(){
   const p=G?G.player:{x:7.5,y:12.5}, g=G?G.g:null;
@@ -245,10 +263,10 @@ function draw(){
   ctx.font='12px "IM Fell English SC", serif'; ctx.fillStyle='rgba(217,207,191,.35)'; ctx.textAlign='left';
   for(const r of ROOMS) ctx.fillText(r.n, r.x*T+4, r.y*T+13);
   if(G){
-    for(const o of G.objs){ const sx=o.shake>0?Math.sin(G.t*60)*2:0; ctx.fillStyle=o.col; if(o.kind==='chair'){ctx.fillRect(o.x*T-5+sx,o.y*T-6,10,12);} else if(o.kind==='book'){ctx.fillRect(o.x*T-6+sx,o.y*T-4,12,8);} else {ctx.beginPath(); ctx.arc(o.x*T+sx,o.y*T,5,0,7); ctx.fill();} }
+    for(const o of G.objs){ const sx=o.shake>0?Math.sin(G.t*60)*2:0; ctx.fillStyle=o.col; if(o.kind==='chair'){ctx.fillRect(o.x*T-5+sx,o.y*T-6,10,12);} else if(o.kind==='book'){ctx.fillRect(o.x*T-6+sx,o.y*T-4,12,8);} else drawObject(o, sx); }
     for(const s of G.salts){ ctx.fillStyle=s.used?'rgba(230,230,230,.25)':'rgba(240,240,240,.8)'; ctx.fillRect(s.x*T+3,s.y*T+T/2-2,T-6,4); }
     if(G.book){ ctx.fillStyle='#d6c7a1'; ctx.fillRect(G.book.x*T-7,G.book.y*T-5,14,10); ctx.fillStyle='#000'; ctx.fillRect(G.book.x*T-1,G.book.y*T-5,2,10); }
-    if(G.uvPrints && G.found.uv){ ctx.fillStyle='rgba(120,90,220,.7)'; ctx.beginPath(); ctx.arc(G.uvPrints[0]*T+T/2,G.uvPrints[1]*T+T/2,5,0,7); ctx.fill(); }
+    if(G.uvPrints && G.found.uv) drawHandprint(G.uvPrints[0]*T+T/2, G.uvPrints[1]*T+T/2, 0.85+0.15*Math.sin(G.t*6));
     // ghost
     const vis=G.hunting||g.flicker>0||G.over;
     if(vis){ ctx.save(); ctx.globalAlpha=G.hunting?0.6+0.4*Math.abs(Math.sin(G.t*18)):0.55;
