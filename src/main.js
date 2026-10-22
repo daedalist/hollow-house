@@ -22,13 +22,57 @@ function showShop(msg){
       <div class="row"><span>${starter?'free':'$'+t.cost}${t.consumable?` · held ${have}`:(have?' · owned':'')}</span>
       <button data-buy="${t.id}" ${can?'':'disabled'}>${t.consumable?'Buy one':(have?'Owned':'Buy')}</button></div></div>`;}).join('');
   o.innerHTML=`<div class="card"><div class="eyebrow">Night ${S.round} · purse $${S.cash}</div><h2>${msg||'The agency storeroom'}</h2>
-    <p>Something is in the house on Marrow Lane. Name it and you are paid $100. Every piece of evidence you log pays $20 even if you flee or guess wrong. Linger and it will come for you.</p>
-    <p><i>Two instruments confirm two of the six kinds of evidence. What a ghost does <b>not</b> leave matters as much as what it does: if your thermometer never drops below zero in its room, mark Freezing as ruled out and the list shrinks. Closets hide you during a hunt.</i></p>
+    <p>${S.round===1?'Your first night. The agency issues two instruments; buy what you can with the rest.':'Restock, then go back in.'} Naming the ghost pays $100; every piece of evidence you log pays $20 whatever happens.</p>
     <div class="shop">${items}</div>
-    <div class="kbd">Move <code>WASD</code>/<code>arrows</code> · select tool <code>1</code>–<code>8</code> · use <code>E</code> · journal <code>J</code>. On a phone, drag on the house to walk and tap USE.</div>
-    <p style="margin-top:14px"><button class="btn primary" id="bEnter">Enter the house</button></p></div>`;
+    <div class="actions"><button class="btn primary" id="bEnter">Enter the house</button><button class="btn" id="bHelpShop">How to play</button></div></div>`;
   o.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const t=TOOLS.find(x=>x.id===b.dataset.buy); S.cash-=t.cost; S.owned[t.id]=(S.owned[t.id]||0)+1; showShop(msg);});
   $('bEnter').onclick=startRound;
+  $('bHelpShop').onclick=()=>showHelp(()=>showShop(msg));
+}
+
+// ---------- Welcome and help ----------
+function showWelcome(){
+  const o=$('ovWelcome'); o.hidden=false;
+  o.innerHTML=`<div class="card welcome">
+    <div class="eyebrow">A game of ghost deduction</div>
+    <h2 class="title">Hollow House</h2>
+    <p class="lede">The house on Marrow Lane has something in it. The agency does not want it gone. It wants it <i>named</i>.</p>
+    <p>Go in with the instruments you can afford. Gather evidence. Work out which of eight spirits you are dealing with and write its name in your journal. The longer you take, the less patient it becomes, and when its patience runs out it will come looking for you.</p>
+    <div class="actions"><button class="btn primary" id="bBegin">Begin</button><button class="btn" id="bHelpWelcome">How to play</button></div>
+    <p class="stat">Keyboard or touch. Nothing is saved between visits.</p></div>`;
+  $('bBegin').onclick=()=>{ o.hidden=true; showShop(); };
+  $('bHelpWelcome').onclick=()=>showHelp(showWelcome);
+}
+function showHelp(back){
+  const o=$('ovHelp'); o.hidden=false; $('ovWelcome').hidden=true; $('ovShop').hidden=true;
+  const tools=TOOLS.map(t=>`<li><b>${t.n}</b> <span class="price">${t.id==='emf'||t.id==='temp'?'issued free':'$'+t.cost}</span><br>${t.desc}</li>`).join('');
+  const evs=Object.values(EV).map(e=>e.name).join(' · ');
+  o.innerHTML=`<div class="card help">
+    <div class="eyebrow">Field manual</div><h2>How to play</h2>
+    <h3>The job</h3>
+    <p>Each night you enter the house, find out which ghost is in it, and name it in your journal. A correct name pays $100 plus a bonus for leaving early. Every piece of evidence you log pays $20 even if you guess wrong or flee. Money carries over; instruments are kept; salt and charms are used up.</p>
+    <h3>Moving about</h3>
+    <ul>
+      <li><b>Desktop:</b> <code>WASD</code> or arrow keys to walk · <code>E</code> or <code>Space</code> to use the equipped tool · <code>1</code>–<code>8</code> to switch tools · <code>J</code> for the journal.</li>
+      <li><b>Touch:</b> drag anywhere on the house to walk (further drag, faster walk) · tap <b>USE</b> for the tool · the tool strip scrolls sideways.</li>
+    </ul>
+    <h3>Evidence</h3>
+    <p>There are six kinds: ${evs}. Each ghost leaves exactly three, and every ghost's three are different, so three confirmed kinds always name it. Evidence only shows up in the ghost's own room, which it mostly stays in. Find the room first: the EMF reader climbs as you get near it, and the thermometer drops.</p>
+    <h3>Instruments</h3>
+    <ul class="tools">${tools}</ul>
+    <h3>The journal</h3>
+    <p>Instruments log what they see automatically. Tap a line once to mark it as seen, twice to mark it <b>ruled out</b>; the list of ghosts shrinks either way. Ruling out is the trick when you can't afford every instrument: if the thermometer never drops below zero in its room, it is not one of the cold ghosts. Each ghost's note hints at how it behaves. Name a ghost to end the night.</p>
+    <h3>Patience and the hunt</h3>
+    <p>The bar under the house shows how patient the ghost is. It drains with time, faster while you stand in its room, and the spirit box costs a few seconds each use. When it empties the ghost hunts: the lantern gutters, the house shakes, and it walks the rooms toward you. A hunt lasts fifteen to thirty seconds and each night's hunts are a little longer and faster. If it reaches you, the night is over and you are dead.</p>
+    <h3>Staying alive</h3>
+    <ul>
+      <li><b>Closets.</b> Every room has one, the cupboard with brass handles. Press USE on it to hide. If the ghost did not see you go in, it loses you and wanders until the hunt ends. If it did, it is still coming.</li>
+      <li><b>Salt.</b> Lay a line in a doorway; a hunting ghost stops on it for three seconds.</li>
+      <li><b>Hearth charm.</b> Burn one to restore thirty seconds of patience.</li>
+      <li><b>Flee.</b> You can leave at any time and keep your tools and evidence pay.</li>
+    </ul>
+    <div class="actions"><button class="btn primary" id="bHelpBack">Back</button></div></div>`;
+  $('bHelpBack').onclick=()=>{ o.hidden=true; back(); };
 }
 
 // ---------- Objects (things to throw) ----------
@@ -85,6 +129,7 @@ cv.addEventListener('pointerup',stickEnd); cv.addEventListener('pointercancel',s
 $('bUse2').addEventListener('pointerdown',e=>e.preventDefault());
 $('bUse').onclick=useTool; $('bUse2').addEventListener('click',useTool); $('bJournal').onclick=toggleJournal;
 $('bLeave').onclick=()=>{ if(G&&!G.over) endRound('fled'); };
+$('bHelp').onclick=()=>{ const wasShop=!$('ovShop').hidden; if(G&&!G.over) G.paused=true; showHelp(()=>{ if(G) G.paused=false; if(wasShop) showShop(); }); };
 
 // ---------- Tools ----------
 function inGhostRoom(){ return roomAt(Math.floor(G.player.x),Math.floor(G.player.y))===G.room; }
@@ -139,7 +184,7 @@ function movePlayer(dt){
 }
 function blocked(x,y,r){ for(const [ox,oy] of [[-r,-r],[r,-r],[-r,r],[r,r]]) if(isWall(Math.floor(x+ox),Math.floor(y+oy))) return true; return false; }
 function update(dt){
-  if(!G||G.over) return; G.t+=dt; if(readTimer>0){readTimer-=dt; if(readTimer<=0) $('readout').textContent='';}
+  if(!G||G.over||G.paused) return; G.t+=dt; if(readTimer>0){readTimer-=dt; if(readTimer<=0) $('readout').textContent='';}
   if(!G.hidden) movePlayer(dt);
   const p=G.player, g=G.g, here=inGhostRoom();
   updateObjects(dt);
@@ -263,4 +308,4 @@ function endRound(kind,name){
     <p style="margin-top:14px"><button class="btn primary" id="bNext">Next night</button></p></div>`;
   $('bNext').onclick=()=>{ o.hidden=true; showShop(); };
 }
-showShop();
+showWelcome();

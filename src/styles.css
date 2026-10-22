@@ -87,3 +87,18 @@ canvas{max-width:100%;max-height:100%;image-rendering:pixelated;background:#000;
 .dead h2{color:var(--blood);font-size:2.2rem}
 .won h2{color:var(--ok)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.card .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.card h3{font-family:var(--display);font-weight:400;font-size:1.05rem;margin:16px 0 4px;letter-spacing:.03em;color:var(--lamp)}
+.card ul{margin:.3em 0;padding-left:1.1em;line-height:1.5;max-width:65ch}
+.card li{margin:.25em 0}
+.card code{font-family:var(--mono);font-size:.85em;border:1px solid var(--line);padding:0 4px;border-radius:2px}
+.tools{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 14px}
+.tools li{font-size:.9rem;line-height:1.4}
+.price{font-family:var(--mono);font-size:.75rem;color:var(--fg-dim)}
+.welcome{text-align:center}
+.welcome .title{font-size:2.6rem;letter-spacing:.06em;margin:4px 0 10px}
+.welcome .lede{font-size:1.1rem;font-style:italic;color:var(--fg)}
+.welcome p{margin-left:auto;margin-right:auto}
+.welcome .actions{justify-content:center}
+#bHelp{font-family:var(--mono);padding-inline:12px;margin-left:auto}
