@@ -1,6 +1,6 @@
 # Hollow House — design notes
 
-Last updated: 2026-10-22
+Last updated: 2026-10-23
 
 ## Current state
 - Eight ghosts, six evidence types, each ghost leaves exactly three.
@@ -9,6 +9,12 @@ Last updated: 2026-10-22
 - Journal supports marking evidence as ruled out, which filters the ghost list.
 - Patience bar under the house; hunts get longer and faster each night. Closets hide the player if the ghost didn't see them enter. Every room has three throwable objects; the Poltergeist throws constantly, others rarely.
 - Camera follows the player (12×9 tile window). Touch: thumbstick on the canvas plus a USE button.
+
+## Procedural houses (branch `procgen-houses`, 2026-10-23)
+- Second mode on the welcome screen: a generated house each night, seed shown in the shop, `?seed=N` to replay. Marrow Lane stays as the fixed mode.
+- Generator (`src/procgen.js`) is structured rather than free-form so plans read as houses: a hall skeleton first (front-door spine, usually a cross corridor: T, L, + or a straight hall), then the leftover rectangles are split into rooms with one-tile walls, then doors, closets and names. Splits prefer to keep every room on the hall; a room reached only through its neighbour is allowed with `innerRoomChance`.
+- Every knob is in `GEN` in `src/data.js`; `?gallery` shows a sheet of plans with the knobs editable. Defaults chosen so 1000 seeds give 6 to 8 rooms (mean about 6.5), no failures, mostly 4 to 5 wide rooms.
+- Not yet done, candidates for later tuning: non-rectangular footprints (a notch out of a corner), halls one tile wide (allowed by the knob, but a hunting ghost fills it), archways without doors like the Marrow Lane lounge, more than one closet in big rooms, room size influencing the ghost's choice of room.
 
 ## Open decisions
 

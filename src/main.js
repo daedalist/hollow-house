@@ -1,11 +1,18 @@
 import './styles.css';
-import { EV, GHOSTS, TOOLS, MAP, ROOMS, W, H, T } from './data.js';
-import { isWall, isDoor, isCloset, roomAt, roomTiles, bfs } from './house.js';
+import { EV, GHOSTS, TOOLS, T } from './data.js';
+import { house, setHouse, MARROW_LANE, isWall, isDoor, isCloset, roomAt, roomTiles, bfs } from './house.js';
+import { generateHouse } from './procgen.js';
 import { rnd, pick } from './rng.js';
 import { isRuledOut, cycleMark } from './deduction.js';
 
 // ---------- State ----------
-const S = { round:1, cash:120, owned:{emf:1,temp:1}, uses:{}, best:0 };
+// mode 'fixed' plays Marrow Lane every night; 'proc' generates a new house each night from seed+night.
+const S = { round:1, cash:120, owned:{emf:1,temp:1}, uses:{}, best:0, mode:'fixed', seed:0 };
+const query=new URLSearchParams(location.search);
+if(query.has('seed')){ S.mode='proc'; S.seed=(+query.get('seed')>>>0)||1; }
+const nightSeed=()=>S.seed+S.round-1;
+// Pick the house for the coming night so the shop can name it.
+function prepareHouse(){ setHouse(S.mode==='proc'?generateHouse(nightSeed()):MARROW_LANE); }
 let G=null; // per-round state
 const $=id=>document.getElementById(id);
 const cv=$('cv'), ctx=cv.getContext('2d');
@@ -21,8 +28,9 @@ function showShop(msg){
     return `<div class="item"><b>${t.n}${starter?' <small>(agency issue)</small>':''}</b><small>${t.desc}</small>
       <div class="row"><span>${starter?'free':'$'+t.cost}${t.consumable?` · held ${have}`:(have?' · owned':'')}</span>
       <button data-buy="${t.id}" ${can?'':'disabled'}>${t.consumable?'Buy one':(have?'Owned':'Buy')}</button></div></div>`;}).join('');
+  const tonight=S.mode==='proc'?`Tonight: <b>${house().name}</b> <small>(house ${house().seed})</small>. `:'';
   o.innerHTML=`<div class="card"><div class="eyebrow">Night ${S.round} · purse $${S.cash}</div><h2>${msg||'The agency storeroom'}</h2>
-    <p>${S.round===1?'Your first night. The agency issues two instruments; buy what you can with the rest.':'Restock, then go back in.'} Naming the ghost pays $100; every piece of evidence you log pays $20 whatever happens.</p>
+    <p>${tonight}${S.round===1?'Your first night. The agency issues two instruments; buy what you can with the rest.':'Restock, then go back in.'} Naming the ghost pays $100; every piece of evidence you log pays $20 whatever happens.</p>
     <div class="shop">${items}</div>
     <div class="actions"><button class="btn primary" id="bEnter">Enter the house</button><button class="btn" id="bHelpShop">How to play</button></div></div>`;
   o.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const t=TOOLS.find(x=>x.id===b.dataset.buy); S.cash-=t.cost; S.owned[t.id]=(S.owned[t.id]||0)+1; showShop(msg);});
@@ -38,9 +46,12 @@ function showWelcome(){
     <h2 class="title">Hollow House</h2>
     <p class="lede">The house on Marrow Lane has something in it. The agency does not want it gone. It wants it <i>named</i>.</p>
     <p>Go in with the instruments you can afford. Gather evidence. Work out which of eight spirits you are dealing with and write its name in your journal. The longer you take, the less patient it becomes, and when its patience runs out it will come looking for you.</p>
-    <div class="actions"><button class="btn primary" id="bBegin">Begin</button><button class="btn" id="bHelpWelcome">How to play</button></div>
-    <p class="stat">Keyboard or touch. Nothing is saved between visits.</p></div>`;
-  $('bBegin').onclick=()=>{ o.hidden=true; showShop(); };
+    <div class="actions">${query.has('seed')
+      ?`<button class="btn primary" id="bBegin" data-mode="proc">Begin at house ${S.seed}</button>`
+      :`<button class="btn primary" id="bBegin" data-mode="fixed">Marrow Lane</button><button class="btn primary" id="bBeginProc" data-mode="proc">A new house each night</button>`}
+      <button class="btn" id="bHelpWelcome">How to play</button></div>
+    <p class="stat">Keyboard or touch. Nothing is saved between visits.${query.has('seed')?'':' New houses are drawn by lot; add ?seed=N to the address to replay one.'}</p></div>`;
+  o.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{ S.mode=b.dataset.mode; if(S.mode==='proc'&&!S.seed) S.seed=1+Math.floor(Math.random()*1e6); o.hidden=true; prepareHouse(); showShop(); });
   $('bHelpWelcome').onclick=()=>showHelp(showWelcome);
 }
 function showHelp(back){
@@ -77,7 +88,7 @@ function showHelp(back){
 
 // ---------- Objects (things to throw) ----------
 const OBJ_KINDS=[['vase','#b9a27a'],['chair','#6b4a2e'],['book','#8a3a3a'],['plate','#cfcfc4'],['lamp','#d9b86a'],['doll','#c48fb0']];
-function spawnObjects(){ const o=[]; for(const r of ROOMS){ const tiles=roomTiles(r.n).filter(([x,y])=>!isCloset(x,y)&&!isDoor(x,y)); for(let i=0;i<3;i++){ const t=pick(tiles); const k=pick(OBJ_KINDS); o.push({x:t[0]+.5,y:t[1]+.5,room:r.n,kind:k[0],col:k[1],vx:0,vy:0,shake:0}); } } return o; }
+function spawnObjects(){ const o=[]; for(const r of house().rooms){ const tiles=roomTiles(r.n).filter(([x,y])=>!isCloset(x,y)&&!isDoor(x,y)); for(let i=0;i<3;i++){ const t=pick(tiles); const k=pick(OBJ_KINDS); o.push({x:t[0]+.5,y:t[1]+.5,room:r.n,kind:k[0],col:k[1],vx:0,vy:0,shake:0}); } } return o; }
 function throwSomething(){ const inRoom=G.objs.filter(o=>o.room===G.room); if(!inRoom.length) return; const o=pick(inRoom);
   const a=Math.random()*Math.PI*2, pow=rnd(3,6); o.vx=Math.cos(a)*pow; o.vy=Math.sin(a)*pow; o.shake=0.6;
   const near=dist(G.player,o)<5; if(near) say(pick(['Something smashes against the wall.','A '+o.kind+' flies across the room on its own.','Glass. Breaking.','The '+o.kind+' hurls itself at you.']),3); }
@@ -88,9 +99,9 @@ function updateObjects(dt){ for(const o of G.objs){ if(o.shake>0) o.shake-=dt; i
 // ---------- Round ----------
 function startRound(){
   $('ovShop').hidden=true; $('ovResult').hidden=true; $('ovJournal').hidden=true;
-  const ghost=pick(GHOSTS), room=pick(ROOMS).n, tiles=roomTiles(room), home=pick(tiles);
+  const ghost=pick(GHOSTS), room=pick(house().rooms).n, tiles=roomTiles(room), home=pick(tiles), [sx,sy]=house().start;
   const basePat = Math.max(45, 95 - (S.round-1)*8) * (ghost.patience||1);
-  G={ ghost, room, tiles, t:0, player:{x:7.5,y:12.5}, g:{x:home[0]+.5,y:home[1]+.5,tx:home[0],ty:home[1],wander:3,flicker:0},
+  G={ ghost, room, tiles, t:0, player:{x:sx+.5,y:sy+.5}, g:{x:home[0]+.5,y:home[1]+.5,tx:home[0],ty:home[1],wander:3,flicker:0},
       patience:basePat, patienceMax:basePat, hunting:false, huntT:0, hunts:0, path:[], pathT:0, stall:0,
       tool:null, found:{}, shots:5, book:null, salts:[], uvPrints:null, boxAsked:0, dead:false, over:false, hidden:false, seen:false, lostT:0, throwT:6, objs:[] };
   G.objs=spawnObjects();
@@ -212,7 +223,7 @@ function update(dt){
       if(!G.hidden){ G.seen=true; G.lastX=Math.floor(p.x); G.lastY=Math.floor(p.y); }
       else if(G.seen && d>2.5){ G.lostT+=dt; if(G.lostT>2.5){ G.seen=false; say('It paces past the closet, searching.',2); } }
       G.pathT-=dt; if(G.pathT<=0 || !G.path.length){ G.pathT=0.35;
-        let target; if(G.seen) target=[Math.floor(p.x),Math.floor(p.y)]; else { if(!G.path.length||Math.random()<0.1){ const t=pick(roomTiles(roomAt(Math.floor(g.x),Math.floor(g.y)))); G.roam=Math.random()<0.5?t:pick(roomTiles(pick(ROOMS).n)); } target=G.roam||[Math.floor(g.x),Math.floor(g.y)]; }
+        let target; if(G.seen) target=[Math.floor(p.x),Math.floor(p.y)]; else { if(!G.path.length||Math.random()<0.1){ const t=pick(roomTiles(roomAt(Math.floor(g.x),Math.floor(g.y)))); G.roam=Math.random()<0.5?t:pick(roomTiles(pick(house().rooms).n)); } target=G.roam||[Math.floor(g.x),Math.floor(g.y)]; }
         G.path=bfs([Math.floor(g.x),Math.floor(g.y)],target); }
       if(G.path.length){ const [nx,ny]=G.path[0], tx=nx+.5, ty=ny+.5; let sp=3.1*(G.ghost.speed||1)*(1+G.hunts*0.06); if(G.ghost.chase && d<4) sp*=G.ghost.chase; sp*=dt;
         const ddx=tx-g.x, ddy=ty-g.y, l=Math.hypot(ddx,ddy); if(l<=sp){ g.x=tx; g.y=ty; G.path.shift();
@@ -249,7 +260,8 @@ function drawObject(o,sx){
 }
 const cam={x:0,y:0,init:false};
 function draw(){
-  const p=G?G.player:{x:7.5,y:12.5}, g=G?G.g:null;
+  const {map:MAP,rooms:ROOMS,w:W,h:H,start}=house();
+  const p=G?G.player:{x:start[0]+.5,y:start[1]+.5}, g=G?G.g:null;
   // camera follows the player, clamped to the house
   const tx=Math.max(0,Math.min(W*T-cv.width,p.x*T-cv.width/2)), ty=Math.max(0,Math.min(H*T-cv.height,p.y*T-cv.height/2));
   if(!cam.init){cam.x=tx;cam.y=ty;cam.init=true;} else {cam.x+=(tx-cam.x)*0.12; cam.y+=(ty-cam.y)*0.12;}
@@ -296,7 +308,7 @@ function renderJournal(){
   const o=$('ovJournal'); Object.keys(G.found).forEach(k=>marks[k]='yes');
   const evs=Object.keys(EV).map(k=>{ const m=marks[k]; return `<button type="button" class="chip ${m==='yes'?'found':m==='no'?'ruled':''}" id="ev_${k}" data-ev="${k}">${m==='yes'?'✓ ':m==='no'?'✗ ':'· '}${EV[k].name}</button>`;}).join('');
     const gs=GHOSTS.map(g=>{ const out=isRuledOut(g,marks); return `<button class="g ${out?'out':''}" data-g="${g.n}" ${out?'disabled':''}><b>${g.n}</b><small>${g.ev.map(e=>EV[e].short).join(' · ')}</small><small><i>${g.note}</i></small></button>`;}).join('');
-  o.innerHTML=`<div class="card"><div class="eyebrow">Field journal · night ${S.round}</div><h2>What haunts Marrow Lane?</h2>
+  o.innerHTML=`<div class="card"><div class="eyebrow">Field journal · night ${S.round}</div><h2>What haunts ${house().name}?</h2>
     <p>Tap a line once for <b>seen</b>, twice for <b>ruled out</b>, again to clear. Green is logged by your instruments. Name a ghost to end the night.</p>
     <div class="ev">${evs}</div><div class="ghosts">${gs}</div>
     <p style="margin-top:14px"><button class="btn" id="bClose">Back to the house</button></p></div>`;
@@ -324,6 +336,6 @@ function endRound(kind,name){
   o.innerHTML=`<div class="card ${cls}"><div class="eyebrow">Night ${S.round-1} · ${kind}</div><h2>${title}</h2><p>${body}</p>
     <p class="stat">Purse now $${S.cash}.</p>
     <p style="margin-top:14px"><button class="btn primary" id="bNext">Next night</button></p></div>`;
-  $('bNext').onclick=()=>{ o.hidden=true; showShop(); };
+  $('bNext').onclick=()=>{ o.hidden=true; prepareHouse(); showShop(); };
 }
-showWelcome();
+if(query.has('gallery')) import('./gallery.js').then(m=>m.showGallery()); else showWelcome();

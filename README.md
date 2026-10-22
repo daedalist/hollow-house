@@ -12,8 +12,11 @@ npm run build    # static site in dist/
 ```
 
 ## Layout
-- `src/data.js` — evidence, ghosts, instruments, the house plan. Edit here to add a ghost or a tool.
-- `src/house.js` — walls, doors, closets, rooms, pathfinding.
+- `src/data.js` — evidence, ghosts, instruments, the Marrow Lane plan, and `GEN`, the knobs for generated houses. Edit here to add a ghost or a tool.
+- `src/house.js` — walls, doors, closets, rooms, pathfinding, for whichever house is current.
+- `src/procgen.js` — procedural house plans: hall skeleton, rooms by binary space partition, doors, closets, names, validation.
+- `src/gallery.js` — open the game with `?gallery` for a sheet of generated plans with the knobs editable; click one to play it.
+- `scripts/print-houses.js` — `node scripts/print-houses.js 6 1` prints six plans as ASCII, starting at seed 1.
 - `src/deduction.js` — the journal's filtering logic.
 - `src/main.js` — game loop, shop, journal, rendering, input.
 - `test/` — tests for the pure modules.
@@ -27,3 +30,5 @@ Every push to `main` runs lint, tests and build, then publishes `dist/` to GitHu
 - Journal: `J` · Select tools: `1`–`8`
 
 Eight ghosts, six kinds of evidence; each ghost leaves exactly three. What a ghost does not leave is evidence too.
+
+Two modes from the welcome screen: Marrow Lane, the same house every night, or a new generated house each night. `?seed=N` replays a generated house (night two is seed N+1, and so on).

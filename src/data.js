@@ -53,3 +53,33 @@ export const ROOMS = [
   {n:'Cellar', x:1,y:10,w:4,h:3},
 ];
 export const W=20,H=14,T=32;
+
+// ---------- Procedural houses ----------
+// Every knob the generator reads. Tune here; test/procgen.test.js checks that plans stay valid.
+export const GEN = {
+  w:20, h:14,                 // footprint in tiles, the same as Marrow Lane
+  attempts:60,                // layouts to try per seed before giving up
+  hallWidth:2,                // tiles. 1 is claustrophobic and a hunting ghost blocks it completely
+  spineSpread:3,              // the front-door hall sits within this many tiles of the centre column
+  corridorChance:0.85,        // a cross corridor off the hall (T, L or + shaped hall). Otherwise a straight hall
+  lChance:0.25,               // when there is a corridor, chance it runs one way only
+  spineUpChance:0.4,          // the hall continues past the corridor to the back wall
+  capChance:0.55,             // each corridor end stops short of the outer wall and a room sits across the end
+  capWidth:[3,5],             // width of that end room
+  room:{ minW:3, minH:3, maxW:7, maxH:6, maxArea:36 }, // wider/taller than the max is always split; bigger in area is split if that keeps it on the hall
+  splitChance:0.65,           // chance to split a rect that does not have to be split (more rooms, smaller rooms)
+  splitBias:0.6,              // where the wall goes when splitting: 0 anywhere, 1 always the middle (fewer slivers)
+  innerRoomChance:0.2,        // chance to allow a split that leaves a room with no wall on the hall (reached through a neighbour)
+  rooms:[6,9],                // accept a plan only if it has this many rooms
+  extraRoomDoorChance:0.2,    // connecting door between two adjacent rooms that already have a way in
+  secondHallDoorChance:0.15,  // a second door onto the hall, on a different wall of the room
+  closetCornerBias:0.8,       // closets prefer corners
+  names:{ largeArea:20, smallArea:12, kitchenMinArea:12, diningMinArea:9 }, // area thresholds for naming
+};
+// Rooms named by rule first (Kitchen, Dining room next to it, Lounge is the largest), then by size.
+export const ROOM_NAMES = {
+  large:  ['Drawing room','Library','Parlour','Billiard room','Morning room'],
+  medium: ['Study','Bedroom','Back bedroom','Guest room','Sewing room','Music room'],
+  small:  ['Nursery','Bathroom','Pantry','Box room','Scullery','Cellar','Larder','Linen room'],
+};
+export const STREETS = ['Thorn Street','Gallows Row','Candle Lane','Wick Street','Sallow Road','Pale Court','Tallow Lane','Mourning Row','Birch Hollow','Hollins Walk','Ember Terrace','Vellum Close'];
