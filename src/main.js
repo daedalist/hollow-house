@@ -309,7 +309,7 @@ function guess(name){ $('ovJournal').hidden=true; marks={}; endRound(name===G.gh
 // ---------- End of round ----------
 function die(){ G.dead=true; setTimeout(()=>endRound('dead'),900); G.over=true; }
 function endRound(kind,name){
-  G.over=true; marks={}; const o=$('ovResult'); let cls='',title='',body='',pay=0;
+  G.over=true; marks={}; const o=$('ovResult'); let cls='',title,body,pay=0;
   const truth=`It was a <b>${G.ghost.n}</b> in the ${G.room.toLowerCase()}.`;
   const evPay=Object.keys(G.found).length*20;
   if(kind==='right'){ cls='won'; const bonus=Math.round(G.patience/G.patienceMax*40); pay=100+bonus+evPay; title='Named, and bound.';
