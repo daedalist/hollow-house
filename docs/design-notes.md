@@ -16,6 +16,56 @@ Last updated: 2026-10-23
 - Every knob is in `GEN` in `src/data.js`; `?gallery` shows a sheet of plans with the knobs editable. Defaults chosen so 1000 seeds give 6 to 8 rooms (mean about 6.5), no failures, mostly 4 to 5 wide rooms.
 - Not yet done, candidates for later tuning: non-rectangular footprints (a notch out of a corner), halls one tile wide (allowed by the knob, but a hunting ghost fills it), archways without doors like the Marrow Lane lounge, more than one closet in big rooms, room size influencing the ghost's choice of room.
 
+## Pacing and creepiness (brainstorm, 2026-10-23)
+Playtest verdict: the game is too fast to be scary. Nothing below is decided yet; it's a list to pick from over time. Many items are knobs that could also feed the difficulty levels below.
+
+### Why it feels fast
+- **Movement.** The player walks at 4.2 tiles/s (`movePlayer`), so crossing the 20×14 house takes about 5 s. Nothing is ever far away.
+- **The EMF reader is a radar.** It gives five levels of straight-line distance through walls, all the time, so the ghost's room is found in seconds.
+- **The thermometer is just as strong.** Every room reads 13.5 °C except the ghost's room, which reads about 4.5 °C (or below zero for cold ghosts) whether or not the ghost leaves cold evidence. Winning strategy: equip it on entry and walk room to room until the number drops. One pass through the house finds the room every time.
+- **Evidence is quick.** The spirit box answers 65% of the time in the room, the camera shows orbs 75% of the time, and the book writes after 10 to 12 s. A competent night lasts about a minute.
+- **Hunts are too frequent to dread.** After a hunt, patience resets to 50%, so the next one comes about 45 s later. Base patience falls 8 s a night to a 45 s floor.
+- **The UI says exactly when you are safe.** The bar label steps through quiet / restless / about to hunt, and a hunt shows `HUNT · 12s`. That certainty removes the fear.
+- **No sound.**
+
+### Ideas
+**Slower tempo, dread in the gaps**
+- Walk at about 2.5 to 3 tiles/s. Maybe add a run that is noisy and costs patience.
+- Make patience longer, but make the house escalate through the three phases instead of being silent until the hunt:
+  - quiet: genuinely nothing happens;
+  - restless: a door you left open is now shut, footsteps in the hall, an object has moved since you last looked;
+  - about to hunt: lantern flickers, breathing on the readout, the doll is now facing you.
+- False alarms: sometimes the lantern gutters and nothing comes. At present gutter always means hunt, so players learn it.
+- Let the ghost occasionally wander out of its room when not hunting (heard, not seen).
+
+**Less precise information**
+- Remove the hunt countdown and blur or remove the patience bar. "Something is moving" and nothing more.
+- EMF reacts to events (the ghost doing something near you) rather than distance. Mostly level 1 or 2 otherwise, so the player has to search.
+- Thermometer stops being a room finder: rooms vary in temperature (a cold cellar, a warm kitchen) and drift, and only a cold ghost pushes its room clearly lower. A non-cold ghost's room should read like any other room. Possibly the reading needs time to settle, so the player has to stand still in a room rather than sweep through it.
+- Room labels hidden until the player has entered the room.
+- Shrink the lantern radius a little: at 4.2 tiles it shows most of a room at once.
+
+**Scarier hunts, not more of them**
+- A pre-roll before the ghost moves: 3 to 4 s of lights dying and a noise from its room, so the player has to decide where to go.
+- During a hunt, draw the ghost only inside the lantern light, blinking in and out. At present it is visible across the whole screen, which makes it a chase rather than a threat.
+- While hidden in a closet, don't draw the ghost unless it is adjacent. Darker screen and a heartbeat instead.
+
+**Make the ghost notes true**
+- Banshee "keens before it hunts", Mare "hates the lantern" and Phantom "vanishes when photographed" are written in the notes but not implemented. Doing them gives each ghost a personality and gives careful players tells to read.
+
+**Sound (Web Audio, synthesised, no assets)**
+- A low drone that thickens as patience falls; footsteps panned towards the ghost during a hunt; a heartbeat when it's close; static on the spirit box.
+- The "Enter the house" tap is the user gesture phones need to start audio.
+
+**Slower evidence**
+- Lower the spirit box and camera odds; the book takes 30 to 60 s. More time in the dark per clue.
+- Pairs with the manual journal (below): noticing a reading yourself is slower and tenser than being told.
+
+### Suggested order
+1. Remove the countdown and add false alarms (small change, big gain in dread).
+2. Slower walking, longer patience, restless-phase events. Also take the room-finding power away from the EMF and thermometer. Constants are in `startRound`, `movePlayer`, `endHunt` and the passive tool block in `update`.
+3. Sound, as its own branch.
+
 ## Open decisions
 
 ### Auto-logging may make it too easy (deferred)
@@ -28,5 +78,5 @@ Review all of the above together as candidate knobs for difficulty levels, e.g.:
 - Hard: manual journal, shorter patience, ghost can find a hidden player if it hunted in that room, Hollow lies more often, fewer free instruments.
 
 ### Later ideas
-- Sound (needs a tap to start audio on phones).
+- Sound (needs a tap to start audio on phones). See Pacing and creepiness above.
 - Minimap now that the camera no longer shows the whole house.
