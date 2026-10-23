@@ -43,11 +43,17 @@ Playtest verdict: the game is too fast to be scary. Nothing below is decided yet
 - EMF reacts to events (the ghost doing something near you) rather than distance. Mostly level 1 or 2 otherwise, so the player has to search.
 - Thermometer stops being a room finder: rooms vary in temperature (a cold cellar, a warm kitchen) and drift, and only a cold ghost pushes its room clearly lower. A non-cold ghost's room should read like any other room. Possibly the reading needs time to settle, so the player has to stand still in a room rather than sweep through it.
 - Room labels hidden until the player has entered the room.
-- Shrink the lantern radius a little: at 4.2 tiles it shows most of a room at once.
+
+**Visibility: lantern radius and window size**
+Two separate knobs, both hard-coded at present:
+- **Lantern radius** (`rad` in `draw`): 4.2 tiles while walking, about 2.6 (flickering) during a hunt, 1.6 while hidden. The darkness is drawn over everything, ghost included, and is near-black beyond the radius, so this is what the player really sees. At 4.2 tiles it shows most of a room at once; 3 or so would make rooms feel bigger and corners worth fearing. It could also shrink as patience falls, or gutter during the restless phase.
+- **Window size** (the canvas, 384×288 in `index.html`, so 12×9 tiles at T=32). The canvas is scaled to fit the screen, so a smaller window means a closer zoom: bigger sprites on a phone and less of the house in frame. With the current lantern the window matters little: a 4.2-tile lantern already nearly fills the 9-tile height. The two need tuning together; a smaller lantern makes a large window mostly black, and a smaller window puts the edge of the frame inside the lantern.
+- Things to try: lantern 3 tiles with a 10×7 window; or keep the window and only shrink the lantern. Check at phone width: the thumbstick is sized in canvas pixels (40 px radius), so a smaller window also makes it bigger on screen.
+- Candidate difficulty knob (bigger lantern on Easy).
 
 **Scarier hunts, not more of them**
 - A pre-roll before the ghost moves: 3 to 4 s of lights dying and a noise from its room, so the player has to decide where to go.
-- During a hunt, draw the ghost only inside the lantern light, blinking in and out. At present it is visible across the whole screen, which makes it a chase rather than a threat.
+- During a hunt the darkness already hides the ghost beyond the 2.6-tile lantern. Going further: make it blink in and out even inside the light, so the player can't track it steadily.
 - While hidden in a closet, don't draw the ghost unless it is adjacent. Darker screen and a heartbeat instead.
 
 **Make the ghost notes true**
