@@ -77,7 +77,7 @@ function showHelp(back){
     <p>The bar under the house shows how patient the ghost is. It drains with time, faster while you stand in its room, and the spirit box costs a few seconds each use. When it empties the ghost hunts: the lantern gutters, the house shakes, and it walks the rooms toward you. A hunt lasts fifteen to thirty seconds and each night's hunts are a little longer and faster. If it reaches you, the night is over and you are dead.</p>
     <h3>Staying alive</h3>
     <ul>
-      <li><b>Closets.</b> Every room has one, the cupboard with brass handles. Press USE on it to hide. If the ghost did not see you go in, it loses you and wanders until the hunt ends. If it did, it is still coming.</li>
+      <li><b>Closets.</b> The cupboards with brass handles; most rooms have one, some do not. Press USE on it to hide. If the ghost did not see you go in, it loses you and wanders until the hunt ends. If it did, it is still coming.</li>
       <li><b>Salt.</b> Lay a line in a doorway; a hunting ghost stops on it for three seconds.</li>
       <li><b>Hearth charm.</b> Burn one to restore thirty seconds of patience.</li>
       <li><b>Flee.</b> You can leave at any time and keep your tools and evidence pay.</li>

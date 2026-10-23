@@ -7,7 +7,7 @@ const $=id=>document.getElementById(id);
 // [path into the params object, label]
 const KNOBS=[['hallWidth','hall width'],['corridorChance','corridor chance'],['lChance','L-shape chance'],['spineUpChance','hall to back wall'],
   ['capChance','room across corridor end'],['splitChance','split chance'],['splitBias','split near middle'],['innerRoomChance','inner room chance'],
-  ['extraRoomDoorChance','extra room door'],['secondHallDoorChance','second hall door'],['rooms.0','min rooms'],['rooms.1','max rooms'],
+  ['extraRoomDoorChance','extra room door'],['secondHallDoorChance','second hall door'],['closets.chance','closet chance per room'],['closets.min','min closets per house'],['rooms.0','min rooms'],['rooms.1','max rooms'],
   ['room.maxW','room max width'],['room.maxH','room max height'],['room.maxArea','room max area'],['names.largeArea','large room area'],['names.smallArea','small room area']];
 const get=(o,path)=>path.split('.').reduce((v,k)=>v[k],o);
 const set=(o,path,v)=>{ const ks=path.split('.'); const last=ks.pop(); const t=ks.reduce((a,k)=>(a[k]=Array.isArray(a[k])?a[k].slice():{...a[k]}),o); t[last]=v; };

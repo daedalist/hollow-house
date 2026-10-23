@@ -8,7 +8,7 @@
 //      Each is split recursively (binary space partition) into rooms with a wall between them.
 //   3. Doors: every room that touches the hall gets one onto it. Rooms that do not get a door
 //      into a neighbour that is connected, until all are. A few extra connecting doors are added.
-//   4. One closet per room, preferring corners and never in front of a door.
+//   4. Closets in some rooms (at most one each, at least closets.min per house), in corners where possible, never in front of a door.
 //   5. Names by rule (Kitchen, Dining room beside it, Lounge is the largest) then by size.
 //   6. The plan is validated; on failure the next attempt for the seed is tried.
 import { GEN, ROOM_NAMES, STREETS } from './data.js';
@@ -19,7 +19,7 @@ const HALL=-2, WALL=-1;
 const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];
 
 export function mergeParams(overrides={}){
-  return { ...GEN, ...overrides, room:{ ...GEN.room, ...(overrides.room||{}) }, names:{ ...GEN.names, ...(overrides.names||{}) } };
+  return { ...GEN, ...overrides, room:{ ...GEN.room, ...(overrides.room||{}) }, names:{ ...GEN.names, ...(overrides.names||{}) }, closets:{ ...GEN.closets, ...(overrides.closets||{}) } };
 }
 
 // Returns a house {map, rooms, w, h, start, name, seed}. Throws if no attempt produced a valid plan.
@@ -109,11 +109,13 @@ function attempt(rng,P,seed){
     if(!hasDoor&&rng.chance(P.extraRoomDoorChance)) placeDoor(i,j); }
   rooms.forEach((r,i)=>{ if(hallDoor[i]&&rng.chance(P.secondHallDoorChance)) placeDoor(HALL,i,hallDoor[i].run); });
 
-  // 4. closets: corners first, never beside a door
+  // 4. closets: some rooms, at most one each; corners first, never beside a door
   const map=own.map(row=>row.map(o=>o===WALL?'#':'.'));
   for(const k of doors){ map[Math.floor(k/w)][k%w]='D'; }
   const besideDoor=(x,y)=>DIRS.some(([dx,dy])=>map[y+dy][x+dx]==='D');
-  for(const r of rooms){ const corners=[], edges=[];
+  const hasCloset=rooms.map(()=>rng.chance(P.closets.chance));
+  for(const i of rng.shuffle(rooms.map((r,i)=>i))){ if(hasCloset.filter(Boolean).length>=Math.min(P.closets.min,rooms.length)) break; hasCloset[i]=true; }
+  for(const [i,r] of rooms.entries()){ if(!hasCloset[i]) continue; const corners=[], edges=[];
     for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++){ if(besideDoor(x,y)) continue;
       const ex=(x===r.x||x===r.x+r.w-1), ey=(y===r.y||y===r.y+r.h-1);
       if(ex&&ey) corners.push([x,y]); else if(ex||ey) edges.push([x,y]); }
@@ -183,13 +185,13 @@ export function validateHouse(house,params){
   for(let y=0;y<h;y++) if(map[y][0]!=='#'||map[y][w-1]!=='#') out.push('open side wall');
   if(rooms.length<P.rooms[0]||rooms.length>P.rooms[1]) out.push('room count '+rooms.length);
   if(new Set(rooms.map(r=>r.n)).size!==rooms.length) out.push('duplicate room names');
-  const owner=new Map(); const at=(x,y)=>(map[y]||'')[x]||'#';
+  const owner=new Map(); const at=(x,y)=>(map[y]||'')[x]||'#'; let totalClosets=0;
   for(const r of rooms){ let closets=0;
     if(r.w<P.room.minW||r.h<P.room.minH) out.push(r.n+' too small');
     for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++){ const k=x+','+y;
       if(owner.has(k)) out.push('overlap at '+k); owner.set(k,r.n);
       const c=at(x,y); if(c==='#'||c==='D') out.push(r.n+' has a wall/door inside'); if(c==='C') closets++; }
-    if(closets!==1) out.push(r.n+' has '+closets+' closets');
+    if(closets>1) out.push(r.n+' has '+closets+' closets'); totalClosets+=closets;
     if(bfsIn(house,house.start,[r.x,r.y]).length===0) out.push(r.n+' unreachable');
   }
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){ const c=at(x,y);
@@ -198,6 +200,7 @@ export function validateHouse(house,params){
       if(at(x+1,y)==='D'||at(x,y+1)==='D') out.push('adjacent doors at '+x+','+y); }
     if(c==='C'&&!owner.has(x+','+y)) out.push('closet in the hall at '+x+','+y);
   }
+  if(totalClosets<Math.min(P.closets.min,rooms.length)) out.push('only '+totalClosets+' closets');
   if(at(...house.start)!=='.') out.push('start is not hall floor');
   return out;
 }

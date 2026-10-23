@@ -73,6 +73,7 @@ export const GEN = {
   rooms:[6,9],                // accept a plan only if it has this many rooms
   extraRoomDoorChance:0.2,    // connecting door between two adjacent rooms that already have a way in
   secondHallDoorChance:0.15,  // a second door onto the hall, on a different wall of the room
+  closets:{ chance:0.65, min:2 }, // each room has a closet with this chance, never more than one; at least min per house
   closetCornerBias:0.8,       // closets prefer corners
   names:{ largeArea:20, smallArea:12, kitchenMinArea:12, diningMinArea:9 }, // area thresholds for naming
 };

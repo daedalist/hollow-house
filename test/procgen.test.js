@@ -38,6 +38,19 @@ describe('generated houses', () => {
   it('give every room enough floor for a closet and three objects', () => {
     for (let s = 1; s <= 100; s++) for (const r of generateHouse(s).rooms) expect(r.w * r.h).toBeGreaterThanOrEqual(GEN.room.minW * GEN.room.minH);
   });
+  it('place at most one closet per room and at least the minimum per house', () => {
+    const closetsIn = (h, r) => { let n = 0; for (let y = r.y; y < r.y + r.h; y++) for (let x = r.x; x < r.x + r.w; x++) if (h.map[y][x] === 'C') n++; return n; };
+    let total = 0, rooms = 0;
+    for (let s = 1; s <= 200; s++) {
+      const h = generateHouse(s); const counts = h.rooms.map(r => closetsIn(h, r));
+      expect(Math.max(...counts)).toBeLessThanOrEqual(1);
+      expect(counts.reduce((a, b) => a + b, 0)).toBeGreaterThanOrEqual(Math.min(GEN.closets.min, h.rooms.length));
+      total += counts.reduce((a, b) => a + b, 0); rooms += h.rooms.length;
+    }
+    expect(total).toBeLessThan(rooms); // some rooms have none
+    const all = generateHouse(5, { closets: { chance: 1 } }); expect(all.rooms.every(r => closetsIn(all, r) === 1)).toBe(true);
+    const few = generateHouse(5, { closets: { chance: 0, min: 1 } }); expect(few.rooms.filter(r => closetsIn(few, r) === 1)).toHaveLength(1);
+  });
   it('respect overrides', () => {
     const h = generateHouse(3, { hallWidth: 1 });
     expect(validateHouse(h, { hallWidth: 1 })).toEqual([]);
